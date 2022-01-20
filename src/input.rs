@@ -41,13 +41,28 @@ fn flipper_action(
             .for_each(|(mut vel, mass_props, _)| {
                 vel.apply_torque_impulse(mass_props, Vec3::new(0.0, 10_000.0, 0.0).into());
             });
+    } else {
+        flippers
+            .iter_mut()
+            .filter(|(_, _, flipper)| **flipper == Flipper::Left)
+            .for_each(|(mut vel, mass_props, _)| {
+                vel.apply_torque_impulse(mass_props, Vec3::new(0.0, -10_000.0, 0.0).into());
+            });
     }
+
     if input.active(Action::RightFlippers) {
         flippers
             .iter_mut()
             .filter(|(_, _, flipper)| **flipper == Flipper::Right)
             .for_each(|(mut vel, mass_props, _)| {
                 vel.apply_torque_impulse(mass_props, Vec3::new(0.0, -10_000.0, 0.0).into());
+            });
+    } else {
+        flippers
+            .iter_mut()
+            .filter(|(_, _, flipper)| **flipper == Flipper::Right)
+            .for_each(|(mut vel, mass_props, _)| {
+                vel.apply_torque_impulse(mass_props, Vec3::new(0.0, 10_000.0, 0.0).into());
             });
     }
 }

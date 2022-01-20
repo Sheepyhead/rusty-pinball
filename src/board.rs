@@ -8,7 +8,7 @@ pub struct Plugin;
 
 impl prelude::Plugin for Plugin {
     fn build(&self, app: &mut prelude::App) {
-        app.add_startup_system(build);
+        app.add_startup_system(build).add_system(respawn_ball);
     }
 }
 
@@ -30,8 +30,14 @@ pub enum FlipperMotor {
     Right,
 }
 
-const LEFT_FLIPPER_POS: bevy::prelude::Vec3 = const_vec3!([40.0, 2.0, 15.0]);
-const RIGHT_FLIPPER_POS: bevy::prelude::Vec3 = const_vec3!([40.0, 2.0, -15.0]);
+#[derive(Component)]
+pub struct DeathZone;
+
+const LEFT_FLIPPER_POS: bevy::prelude::Vec3 = const_vec3!([40.0, 3.0, 15.0]);
+const RIGHT_FLIPPER_POS: bevy::prelude::Vec3 = const_vec3!([40.0, 3.0, -15.0]);
+enum CollisionGroups {
+    Balls = 0b1,
+}
 
 fn build(mut commands: Commands, mut config: ResMut<RapierConfiguration>) {
     config.gravity = vector!(-0.5, 1.0, 0.0).normalize() * -9.81 * 25.0;
@@ -46,24 +52,24 @@ fn build(mut commands: Commands, mut config: ResMut<RapierConfiguration>) {
         ..DirectionalLightBundle::default()
     });
 
-    commands
-        .spawn_bundle(ColliderBundle {
-            shape: ColliderShape::ball(1.).into(),
-            ..ColliderBundle::default()
-        })
-        .insert_bundle(RigidBodyBundle {
-            position: Vec3::new(0.0, 10.0, 10.0).into(),
-            ..RigidBodyBundle::default()
-        })
-        .insert_bundle((
-            ColliderPositionSync::Discrete,
-            ColliderDebugRender::from(Color::GREEN),
-            Ball,
-        ));
+    spawn_ball(&mut commands);
 
     let backboard = commands
         .spawn_bundle(ColliderBundle {
             shape: ColliderShape::cuboid(50.0, 1.0, 25.0).into(),
+            material: ColliderMaterial {
+                friction: 0.01,
+                ..ColliderMaterial::default()
+            }
+            .into(),
+            flags: ColliderFlags {
+                collision_groups: InteractionGroups::new(
+                    u32::MAX ^ (CollisionGroups::Balls as u32),
+                    CollisionGroups::Balls as u32,
+                ),
+                ..ColliderFlags::default()
+            }
+            .into(),
             ..ColliderBundle::default()
         })
         .insert_bundle(RigidBodyBundle {
@@ -79,12 +85,34 @@ fn build(mut commands: Commands, mut config: ResMut<RapierConfiguration>) {
 
     commands
         .spawn_bundle(ColliderBundle {
-            shape: ColliderShape::cuboid(50.0, 10.0, 1.0).into(),
+            shape: ColliderShape::cuboid(60.0, 10.0, 30.0).into(),
+            material: ColliderMaterial {
+                friction: 0.01,
+                ..ColliderMaterial::default()
+            }
+            .into(),
             ..ColliderBundle::default()
         })
         .insert_bundle(RigidBodyBundle {
             body_type: RigidBodyTypeComponent(RigidBodyType::Static),
-            position: vec3(0.0, 0.0, -25.0).into(),
+            position: Vec3::new(0.0, 15.0, 0.0).into(),
+            ..RigidBodyBundle::default()
+        })
+        .insert_bundle((ColliderPositionSync::Discrete,));
+
+    commands
+        .spawn_bundle(ColliderBundle {
+            shape: ColliderShape::cuboid(50.0, 20.0, 10.0).into(),
+            material: ColliderMaterial {
+                friction: 0.01,
+                ..ColliderMaterial::default()
+            }
+            .into(),
+            ..ColliderBundle::default()
+        })
+        .insert_bundle(RigidBodyBundle {
+            body_type: RigidBodyTypeComponent(RigidBodyType::Static),
+            position: vec3(0.0, 0.0, -30.0).into(),
             ..RigidBodyBundle::default()
         })
         .insert_bundle((
@@ -94,12 +122,17 @@ fn build(mut commands: Commands, mut config: ResMut<RapierConfiguration>) {
 
     commands
         .spawn_bundle(ColliderBundle {
-            shape: ColliderShape::cuboid(50.0, 10.0, 1.0).into(),
+            shape: ColliderShape::cuboid(50.0, 20.0, 10.0).into(),
+            material: ColliderMaterial {
+                friction: 0.01,
+                ..ColliderMaterial::default()
+            }
+            .into(),
             ..ColliderBundle::default()
         })
         .insert_bundle(RigidBodyBundle {
             body_type: RigidBodyTypeComponent(RigidBodyType::Static),
-            position: vec3(0.0, 0.0, 25.0).into(),
+            position: vec3(0.0, 0.0, 30.0).into(),
             ..RigidBodyBundle::default()
         })
         .insert_bundle((
@@ -109,54 +142,49 @@ fn build(mut commands: Commands, mut config: ResMut<RapierConfiguration>) {
 
     commands
         .spawn_bundle(ColliderBundle {
-            shape: ColliderShape::cuboid(1.0, 10.0, 25.0).into(),
+            shape: ColliderShape::cuboid(10.0, 20.0, 25.0).into(),
+            material: ColliderMaterial {
+                friction: 0.01,
+                ..ColliderMaterial::default()
+            }
+            .into(),
             ..ColliderBundle::default()
         })
         .insert_bundle(RigidBodyBundle {
             body_type: RigidBodyTypeComponent(RigidBodyType::Static),
-            position: vec3(-50.0, 0.0, 0.0).into(),
+            position: vec3(-55.0, 0.0, 0.0).into(),
             ..RigidBodyBundle::default()
         })
         .insert_bundle((
             ColliderPositionSync::Discrete,
             ColliderDebugRender::from(Color::ORANGE),
-            Backboard,
         ));
 
     commands
         .spawn_bundle(ColliderBundle {
-            shape: ColliderShape::cuboid(50.0, 10.0, 1.0).into(),
+            collider_type: ColliderType::Sensor.into(),
+            flags: ActiveEvents::empty().into(),
+            shape: ColliderShape::cuboid(10.0, 10.0, 25.0).into(),
             ..ColliderBundle::default()
         })
         .insert_bundle(RigidBodyBundle {
             body_type: RigidBodyTypeComponent(RigidBodyType::Static),
-            position: vec3(0.0, 0.0, -25.0).into(),
+            position: vec3(60.0, 0.0, 0.0).into(),
             ..RigidBodyBundle::default()
         })
-        .insert_bundle((
-            ColliderPositionSync::Discrete,
-            ColliderDebugRender::from(Color::ORANGE),
-            Backboard,
-        ));
+        .insert_bundle((ColliderPositionSync::Discrete, DeathZone));
 
-    commands
-        .spawn_bundle(ColliderBundle {
-            shape: ColliderShape::cuboid(50.0, 10.0, 1.0).into(),
-            ..ColliderBundle::default()
-        })
-        .insert_bundle(RigidBodyBundle {
-            body_type: RigidBodyTypeComponent(RigidBodyType::Static),
-            position: vec3(0.0, 0.0, -25.0).into(),
-            ..RigidBodyBundle::default()
-        })
-        .insert_bundle((
-            ColliderPositionSync::Discrete,
-            ColliderDebugRender::from(Color::ORANGE),
-            Backboard,
-        ));
     let right_flipper = commands
         .spawn_bundle(ColliderBundle {
-            shape: ColliderShape::cuboid(1.0, 1.0, 5.0).into(),
+            shape: ColliderShape::cuboid(1.0, 2.0, 5.0).into(),
+            flags: ColliderFlags {
+                collision_groups: InteractionGroups::new(
+                    u32::MAX ^ (CollisionGroups::Balls as u32),
+                    CollisionGroups::Balls as u32,
+                ),
+                ..ColliderFlags::default()
+            }
+            .into(),
             ..ColliderBundle::default()
         })
         .insert_bundle(RigidBodyBundle {
@@ -164,7 +192,7 @@ fn build(mut commands: Commands, mut config: ResMut<RapierConfiguration>) {
             ..RigidBodyBundle::default()
         })
         .insert_bundle((
-            ColliderPositionSync::Discrete,
+            RigidBodyPositionSync::Interpolated { prev_pos: None },
             ColliderDebugRender::from(Color::RED),
             Flipper::Right,
         ))
@@ -184,7 +212,15 @@ fn build(mut commands: Commands, mut config: ResMut<RapierConfiguration>) {
 
     let left_flipper = commands
         .spawn_bundle(ColliderBundle {
-            shape: ColliderShape::cuboid(1.0, 1.0, 5.0).into(),
+            shape: ColliderShape::cuboid(1.0, 2.0, 5.0).into(),
+            flags: ColliderFlags {
+                collision_groups: InteractionGroups::new(
+                    u32::MAX ^ (CollisionGroups::Balls as u32),
+                    CollisionGroups::Balls as u32,
+                ),
+                ..ColliderFlags::default()
+            }
+            .into(),
             ..ColliderBundle::default()
         })
         .insert_bundle(RigidBodyBundle {
@@ -192,7 +228,7 @@ fn build(mut commands: Commands, mut config: ResMut<RapierConfiguration>) {
             ..RigidBodyBundle::default()
         })
         .insert_bundle((
-            ColliderPositionSync::Discrete,
+            RigidBodyPositionSync::Interpolated { prev_pos: None },
             ColliderDebugRender::from(Color::RED),
             Flipper::Left,
         ))
@@ -209,4 +245,55 @@ fn build(mut commands: Commands, mut config: ResMut<RapierConfiguration>) {
         ),
         FlipperMotor::Left,
     ));
+}
+
+fn spawn_ball(commands: &mut Commands) {
+    commands
+        .spawn_bundle(ColliderBundle {
+            flags: ColliderFlags {
+                collision_groups: InteractionGroups::new(CollisionGroups::Balls as u32, u32::MAX),
+                active_events: ActiveEvents::INTERSECTION_EVENTS,
+                ..ColliderFlags::default()
+            }
+            .into(),
+            shape: ColliderShape::ball(1.).into(),
+            material: ColliderMaterial {
+                friction: 0.01,
+                ..ColliderMaterial::default()
+            }
+            .into(),
+            ..ColliderBundle::default()
+        })
+        .insert_bundle(RigidBodyBundle {
+            position: Vec3::new(0.0, 5.0, 10.0).into(),
+            ..RigidBodyBundle::default()
+        })
+        .insert_bundle((
+            RigidBodyPositionSync::Interpolated { prev_pos: None },
+            ColliderDebugRender::from(Color::GREEN),
+            Ball,
+        ));
+}
+
+fn respawn_ball(
+    mut commands: Commands,
+    mut intersection_events: EventReader<IntersectionEvent>,
+    balls: Query<(), With<Ball>>,
+    death_zones: Query<(), With<DeathZone>>,
+) {
+    intersection_events
+        .iter()
+        .filter_map(|event| {
+            dbg!(event.intersecting);
+            let e1 = event.collider1.entity();
+            let e2 = event.collider2.entity();
+            let ball_dz = (balls.get(e1).is_ok() && death_zones.get(e2).is_ok()).then(|| e1);
+            let dz_ball = (balls.get(e2).is_ok() && death_zones.get(e1).is_ok()).then(|| e2);
+            ball_dz.or(dz_ball)
+        })
+        .for_each(|ball| {
+            println!("Killed ball {ball:?}");
+            commands.entity(ball).despawn_recursive();
+            spawn_ball(&mut commands);
+        });
 }
