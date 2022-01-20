@@ -1,5 +1,5 @@
 use bevy::{
-    math::const_vec3,
+    math::{const_vec3, vec3},
     prelude::{self, *},
 };
 use bevy_rapier3d::prelude::*;
@@ -30,8 +30,8 @@ pub enum FlipperMotor {
     Right,
 }
 
-const LEFT_FLIPPER_POS: bevy::prelude::Vec3 = const_vec3!([40.0, 2.0, 20.0]);
-const RIGHT_FLIPPER_POS: bevy::prelude::Vec3 = const_vec3!([40.0, 2.0, -20.0]);
+const LEFT_FLIPPER_POS: bevy::prelude::Vec3 = const_vec3!([40.0, 2.0, 15.0]);
+const RIGHT_FLIPPER_POS: bevy::prelude::Vec3 = const_vec3!([40.0, 2.0, -15.0]);
 
 fn build(mut commands: Commands, mut config: ResMut<RapierConfiguration>) {
     config.gravity = vector!(-0.5, 1.0, 0.0).normalize() * -9.81 * 25.0;
@@ -52,7 +52,7 @@ fn build(mut commands: Commands, mut config: ResMut<RapierConfiguration>) {
             ..ColliderBundle::default()
         })
         .insert_bundle(RigidBodyBundle {
-            position: Vec3::new(0.0, 10.0, 15.0).into(),
+            position: Vec3::new(0.0, 10.0, 10.0).into(),
             ..RigidBodyBundle::default()
         })
         .insert_bundle((
@@ -77,6 +77,83 @@ fn build(mut commands: Commands, mut config: ResMut<RapierConfiguration>) {
         ))
         .id();
 
+    commands
+        .spawn_bundle(ColliderBundle {
+            shape: ColliderShape::cuboid(50.0, 10.0, 1.0).into(),
+            ..ColliderBundle::default()
+        })
+        .insert_bundle(RigidBodyBundle {
+            body_type: RigidBodyTypeComponent(RigidBodyType::Static),
+            position: vec3(0.0, 0.0, -25.0).into(),
+            ..RigidBodyBundle::default()
+        })
+        .insert_bundle((
+            ColliderPositionSync::Discrete,
+            ColliderDebugRender::from(Color::ORANGE),
+        ));
+
+    commands
+        .spawn_bundle(ColliderBundle {
+            shape: ColliderShape::cuboid(50.0, 10.0, 1.0).into(),
+            ..ColliderBundle::default()
+        })
+        .insert_bundle(RigidBodyBundle {
+            body_type: RigidBodyTypeComponent(RigidBodyType::Static),
+            position: vec3(0.0, 0.0, 25.0).into(),
+            ..RigidBodyBundle::default()
+        })
+        .insert_bundle((
+            ColliderPositionSync::Discrete,
+            ColliderDebugRender::from(Color::ORANGE),
+        ));
+
+    commands
+        .spawn_bundle(ColliderBundle {
+            shape: ColliderShape::cuboid(1.0, 10.0, 25.0).into(),
+            ..ColliderBundle::default()
+        })
+        .insert_bundle(RigidBodyBundle {
+            body_type: RigidBodyTypeComponent(RigidBodyType::Static),
+            position: vec3(-50.0, 0.0, 0.0).into(),
+            ..RigidBodyBundle::default()
+        })
+        .insert_bundle((
+            ColliderPositionSync::Discrete,
+            ColliderDebugRender::from(Color::ORANGE),
+            Backboard,
+        ));
+
+    commands
+        .spawn_bundle(ColliderBundle {
+            shape: ColliderShape::cuboid(50.0, 10.0, 1.0).into(),
+            ..ColliderBundle::default()
+        })
+        .insert_bundle(RigidBodyBundle {
+            body_type: RigidBodyTypeComponent(RigidBodyType::Static),
+            position: vec3(0.0, 0.0, -25.0).into(),
+            ..RigidBodyBundle::default()
+        })
+        .insert_bundle((
+            ColliderPositionSync::Discrete,
+            ColliderDebugRender::from(Color::ORANGE),
+            Backboard,
+        ));
+
+    commands
+        .spawn_bundle(ColliderBundle {
+            shape: ColliderShape::cuboid(50.0, 10.0, 1.0).into(),
+            ..ColliderBundle::default()
+        })
+        .insert_bundle(RigidBodyBundle {
+            body_type: RigidBodyTypeComponent(RigidBodyType::Static),
+            position: vec3(0.0, 0.0, -25.0).into(),
+            ..RigidBodyBundle::default()
+        })
+        .insert_bundle((
+            ColliderPositionSync::Discrete,
+            ColliderDebugRender::from(Color::ORANGE),
+            Backboard,
+        ));
     let right_flipper = commands
         .spawn_bundle(ColliderBundle {
             shape: ColliderShape::cuboid(1.0, 1.0, 5.0).into(),
