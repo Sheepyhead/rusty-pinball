@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_rapier3d::{na::Vector3, prelude::*};
+use bevy_rapier3d::prelude::*;
 
 fn main() {
     App::new()
@@ -18,7 +18,7 @@ pub struct Ball;
 pub struct Backboard;
 
 fn build_board(mut commands: Commands, mut config: ResMut<RapierConfiguration>) {
-    config.gravity = vector!(-0.5, 1.0, 0.0).normalize() * -9.81;
+    config.gravity = vector!(-0.5, 1.0, 0.0).normalize() * -9.81 * 25.0;
 
     commands
         .spawn_bundle(ColliderBundle {
@@ -31,7 +31,7 @@ fn build_board(mut commands: Commands, mut config: ResMut<RapierConfiguration>) 
         })
         .insert_bundle((
             ColliderPositionSync::Discrete,
-            ColliderDebugRender::with_id(2),
+            ColliderDebugRender::from(Color::GREEN),
             Ball,
             Transform::default(),
             GlobalTransform::default(),
@@ -44,7 +44,7 @@ fn build_board(mut commands: Commands, mut config: ResMut<RapierConfiguration>) 
         })
         .insert_bundle((
             ColliderPositionSync::Discrete,
-            ColliderDebugRender::with_id(0),
+            ColliderDebugRender::from(Color::ORANGE),
             Backboard,
             Transform::default(),
             GlobalTransform::default(),
@@ -58,10 +58,19 @@ fn build_board(mut commands: Commands, mut config: ResMut<RapierConfiguration>) 
         })
         .insert_bundle((
             ColliderPositionSync::Discrete,
-            ColliderDebugRender::with_id(1),
+            ColliderDebugRender::from(Color::ORANGE),
             Transform::default(),
             GlobalTransform::default(),
         ));
+
+    commands.spawn_bundle(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            color: Color::ANTIQUE_WHITE,
+            illuminance: 32_000.0,
+            ..DirectionalLight::default()
+        },
+        ..DirectionalLightBundle::default()
+    });
 }
 
 fn spawn_cameras(mut commands: Commands) {
