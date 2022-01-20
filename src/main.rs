@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_rapier3d::prelude::*;
+use bevy_rapier3d::{na::Vector3, prelude::*};
 
 fn main() {
     App::new()
@@ -17,11 +17,13 @@ pub struct Ball;
 #[derive(Component)]
 pub struct Backboard;
 
-fn build_board(mut commands: Commands) {
+fn build_board(mut commands: Commands, mut config: ResMut<RapierConfiguration>) {
+    config.gravity = vector!(-0.5, 1.0, 0.0).normalize() * -9.81;
+
     commands
         .spawn_bundle(ColliderBundle {
             shape: ColliderShape::ball(0.5).into(),
-            position: Vec3::new(0.0, 50.0, 0.0).into(),
+            position: Vec3::new(0.0, 10.0, 0.0).into(),
             ..ColliderBundle::default()
         })
         .insert_bundle(RigidBodyBundle {
@@ -64,7 +66,7 @@ fn build_board(mut commands: Commands) {
 
 fn spawn_cameras(mut commands: Commands) {
     commands.spawn_bundle(PerspectiveCameraBundle {
-        transform: Transform::from_translation(Vec3::new(0.0, 100.0, 200.0))
+        transform: Transform::from_translation(Vec3::new(100.0, 100.0, 0.0))
             .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
         ..PerspectiveCameraBundle::default()
     });
