@@ -397,6 +397,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_input_actionmap"
+version = "0.1.0"
+source = "git+https://github.com/lightsoutgames/bevy_input_actionmap#13e395520872b0e34b84fddf597c3367c8a2c31d"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "bevy_internal"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2751,6 +2759,7 @@ name = "rusty-pinball"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "bevy_input_actionmap",
  "bevy_rapier3d",
 ]
 
